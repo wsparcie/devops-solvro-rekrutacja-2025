@@ -1,0 +1,65 @@
+replicaCount: 1
+
+image:
+  repository: ksuser/cocktail-api
+  tag: 'dev'
+
+app:
+  nodeEnv: development
+  logLevel: debug
+  domain: cocktails-dev.wsparcie.dev
+
+ingress:
+  hosts:
+    - host: cocktails-dev.wsparcie.dev
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: cocktail-api-dev-tls
+      hosts:
+        - cocktails-dev.wsparcie.dev
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 256Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+autoscaling:
+  enabled: false
+
+cache:
+  enabled: true
+  ttl: 600
+
+postgresql:
+  primary:
+    persistence:
+      size: 5Gi
+    resources:
+      limits:
+        cpu: 250m
+        memory: 256Mi
+      requests:
+        cpu: 50m
+        memory: 128Mi
+
+redis:
+  enabled: true
+  master:
+    persistence:
+      enabled: false
+      size: 1Gi
+    resources:
+      limits:
+        cpu: 100m
+        memory: 128Mi
+      requests:
+        cpu: 50m
+        memory: 64Mi
+
+cronjob:
+  schedule: '0 */6 * * *'

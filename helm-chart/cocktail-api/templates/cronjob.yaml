@@ -1,0 +1,76 @@
+{{- if .Values.cronjob.enabled }}
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "cocktail-api.fullname" . }}-sync
+  labels:
+    {{- include "cocktail-api.labels" . | nindent 4 }}
+spec:
+  schedule: {{ .Values.cronjob.schedule | quote }}
+  concurrencyPolicy: {{ .Values.cronjob.concurrencyPolicy }}
+  successfulJobsHistoryLimit: {{ .Values.cronjob.successfulJobsHistoryLimit }}
+  failedJobsHistoryLimit: {{ .Values.cronjob.failedJobsHistoryLimit }}
+  jobTemplate:
+    spec:
+      template:
+        metadata:
+          labels:
+            {{- include "cocktail-api.selectorLabels" . | nindent 12 }}
+            job: sync
+        spec:
+          {{- with .Values.imagePullSecrets }}
+          imagePullSecrets:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          serviceAccountName: {{ include "cocktail-api.serviceAccountName" . }}
+          securityContext:
+            {{- toYaml .Values.podSecurityContext | nindent 12 }}
+          restartPolicy: {{ .Values.cronjob.restartPolicy }}
+          containers:
+            - name: sync-ingredients
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+              command: ["node", "ace", "synchronize:ingredients"]
+              envFrom:
+                - configMapRef:
+                    name: {{ include "cocktail-api.fullname" . }}
+                - secretRef:
+                    name: {{ include "cocktail-api.fullname" . }}
+              resources:
+                limits:
+                  cpu: 500m
+                  memory: 256Mi
+                requests:
+                  cpu: 100m
+                  memory: 128Mi
+              {{- if .Values.persistence.enabled }}
+              volumeMounts:
+                - name: images
+                  mountPath: {{ .Values.persistence.mountPath }}
+              {{- end }}
+            - name: sync-cocktails
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+              command: ["sh", "-c", "sleep 300 && node ace synchronize:cocktails"]
+              envFrom:
+                - configMapRef:
+                    name: {{ include "cocktail-api.fullname" . }}
+                - secretRef:
+                    name: {{ include "cocktail-api.fullname" . }}
+              resources:
+                limits:
+                  cpu: 500m
+                  memory: 256Mi
+                requests:
+                  cpu: 100m
+                  memory: 128Mi
+              {{- if .Values.persistence.enabled }}
+              volumeMounts:
+                - name: images
+                  mountPath: {{ .Values.persistence.mountPath }}
+              {{- end }}
+          {{- if .Values.persistence.enabled }}
+          volumes:
+            - name: images
+              persistentVolumeClaim:
+                claimName: {{ include "cocktail-api.fullname" . }}-images
+          {{- end }}
+{{- end }}

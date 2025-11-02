@@ -1,0 +1,167 @@
+replicaCount: 2
+
+image:
+  repository: ksuser/cocktail-api
+  pullPolicy: IfNotPresent
+  tag: 'latest'
+
+secrets:
+  appKey: SEpLX0lGd2xQYUZ3LXIzNDNHX3ZreHo5SWx4S3JmekQ= # HJK_IFwlPaFw-r343G_vkxz9IlxKrfzD
+  postgresql:
+    username: Y29ja3RhaWxzX3VzZXI= # cocktails_user
+    password: Y29ja3RhaWxzX3Bhc3N3b3Jk # cocktails_password
+
+imagePullSecrets: []
+nameOverride: ''
+fullnameOverride: ''
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ''
+
+podAnnotations: {}
+
+podSecurityContext:
+  fsGroup: 1000
+
+securityContext:
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: false
+  runAsNonRoot: true
+  runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 3369
+
+ingress:
+  enabled: true
+  className: 'nginx'
+  annotations:
+    cert-manager.io/cluster-issuer: 'letsencrypt-prod'
+    nginx.ingress.kubernetes.io/ssl-redirect: 'true'
+    nginx.ingress.kubernetes.io/force-ssl-redirect: 'true'
+  hosts:
+    - host: cocktails.wsparcie.dev
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: cocktail-api-tls
+      hosts:
+        - cocktails.wsparcie.dev
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+persistence:
+  enabled: true
+  storageClass: ''
+  accessMode: ReadWriteMany
+  size: 10Gi
+  mountPath: /app/public
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+app:
+  nodeEnv: production
+  port: 3369
+  host: '0.0.0.0'
+  logLevel: info
+  domain: cocktails.wsparcie.dev
+  appKey: 'CHANGE_ME_TO_SECURE_RANDOM_KEY'
+  driveDisk: fs
+
+database:
+  host: '{{ .Release.Name }}-postgresql'
+  port: 5432
+  name: cocktails
+  user: postgres
+  password: 'CHANGE_ME_SECURE_PASSWORD'
+
+cache:
+  enabled: true
+  host: '{{ .Release.Name }}-redis-master'
+  port: 6379
+  ttl: 3600
+
+postgresql:
+  enabled: true
+  auth:
+    username: cocktails_user
+    password: 'cocktails_password'
+    database: cocktails
+  primary:
+    persistence:
+      enabled: true
+      size: 10Gi
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 256Mi
+
+redis:
+  enabled: true
+  architecture: standalone
+  auth:
+    enabled: false
+  master:
+    persistence:
+      enabled: true
+      size: 2Gi
+    resources:
+      limits:
+        cpu: 250m
+        memory: 256Mi
+      requests:
+        cpu: 100m
+        memory: 128Mi
+
+cronjob:
+  enabled: true
+  schedule: '0 3 * * *'
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  concurrencyPolicy: Forbid
+  restartPolicy: OnFailure
+
+livenessProbe:
+  httpGet:
+    path: /
+    port: http
+  initialDelaySeconds: 60
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /
+    port: http
+  initialDelaySeconds: 30
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3

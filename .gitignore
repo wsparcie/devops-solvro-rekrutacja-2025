@@ -1,0 +1,43 @@
+# Kubernetes & Helm
+*.tgz
+.helmignore
+charts/
+Chart.lock
+
+# Custom values with secrets
+my-values.yaml
+*-secrets.yaml
+secrets.yaml
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.log
+*.tmp
+tmp/
+temp/
+
+# Build artifacts
+build/
+dist/
+*.tar.gz
+
+# Node modules (if working locally)
+node_modules/
+
+# Docker
+.dockerignore

@@ -1,0 +1,79 @@
+replicaCount: 1
+
+image:
+  repository: ksuser/cocktail-api
+  tag: 'latest'
+
+app:
+  nodeEnv: production
+  logLevel: info
+  domain: cocktails.wsparcie.dev
+
+persistence:
+  enabled: true
+  accessMode: ReadWriteOnce
+  size: 10Gi
+
+ingress:
+  hosts:
+    - host: cocktails.wsparcie.dev
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - secretName: cocktail-api-prod-tls
+      hosts:
+        - cocktails.wsparcie.dev
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+autoscaling:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
+  targetMemoryUtilizationPercentage: 80
+
+cache:
+  enabled: true
+  ttl: 3600
+
+postgresql:
+  image:
+    tag: 'latest'
+  primary:
+    persistence:
+      enabled: true
+      size: 20Gi
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 1Gi
+      requests:
+        cpu: 250m
+        memory: 512Mi
+
+redis:
+  enabled: true
+  image:
+    tag: 'latest'
+  master:
+    persistence:
+      enabled: true
+      size: 5Gi
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 250m
+        memory: 256Mi
+
+cronjob:
+  schedule: '0 3 * * *'
