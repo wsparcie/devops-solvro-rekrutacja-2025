@@ -1,0 +1,35 @@
+{{- if .Values.certManager.enabled }}
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: {{ .Values.certManager.clusterIssuer.prod.name }}
+  labels:
+    {{- include "cocktail-api.labels" . | nindent 4 }}
+spec:
+  acme:
+    server: {{ .Values.certManager.clusterIssuer.prod.server }}
+    email: {{ .Values.certManager.clusterIssuer.prod.email }}
+    privateKeySecretRef:
+      name: {{ .Values.certManager.clusterIssuer.prod.name }}
+    solvers:
+      - http01:
+          ingress:
+            class: {{ .Values.ingress.className }}
+---
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: {{ .Values.certManager.clusterIssuer.staging.name }}
+  labels:
+    {{- include "cocktail-api.labels" . | nindent 4 }}
+spec:
+  acme:
+    server: {{ .Values.certManager.clusterIssuer.staging.server }}
+    email: {{ .Values.certManager.clusterIssuer.staging.email }}
+    privateKeySecretRef:
+      name: {{ .Values.certManager.clusterIssuer.staging.name }}
+    solvers:
+      - http01:
+          ingress:
+            class: {{ .Values.ingress.className }}
+{{- end }}

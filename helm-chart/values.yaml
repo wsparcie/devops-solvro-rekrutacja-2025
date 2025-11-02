@@ -148,6 +148,16 @@ cronjob:
   concurrencyPolicy: Forbid
   restartPolicy: OnFailure
 
+certManager:
+  enabled: true
+  clusterIssuer:
+    prod:
+      name: letsencrypt-prod
+      server: https://acme-v02.api.letsencrypt.org/directory
+    staging:
+      name: letsencrypt-staging
+      server: https://acme-staging-v02.api.letsencrypt.org/directory
+
 livenessProbe:
   httpGet:
     path: /
