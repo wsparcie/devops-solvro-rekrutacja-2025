@@ -1,8 +1,13 @@
 replicaCount: 1
 
 image:
-  repository: ksuser/cocktail-api
+  repository: ksuser/cocktails-api
   tag: 'latest'
+  pullPolicy: Always
+
+serviceAccount:
+  annotations:
+    iam.gke.io/gcp-service-account: gcs-fuse-sa@koktajlownik-477108.iam.gserviceaccount.com
 
 app:
   nodeEnv: production
@@ -11,7 +16,7 @@ app:
 
 persistence:
   enabled: true
-  accessMode: ReadWriteOnce
+  accessMode: ReadWriteMany
   size: 10Gi
 
 ingress:
@@ -76,4 +81,9 @@ redis:
         memory: 256Mi
 
 cronjob:
+  enabled: true
   schedule: '0 3 * * *'
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 3
+  restartPolicy: OnFailure

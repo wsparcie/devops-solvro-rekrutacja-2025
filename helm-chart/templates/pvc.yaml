@@ -1,4 +1,46 @@
 {{- if .Values.persistence.enabled }}
+{{- if eq .Values.persistence.accessMode "ReadWriteMany" }}
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: {{ include "cocktail-api.fullname" . }}-gcs-pv
+  labels:
+    {{- include "cocktail-api.labels" . | nindent 4 }}
+spec:
+  capacity:
+    storage: {{ .Values.persistence.size }}
+  accessModes:
+    - ReadWriteMany
+  storageClassName: standard-rwx
+  claimRef:
+    namespace: {{ .Release.Namespace }}
+    name: {{ include "cocktail-api.fullname" . }}-images
+  mountOptions:
+    - implicit-dirs
+    - uid=1000
+    - gid=1000
+  csi:
+    driver: gcsfuse.csi.storage.gke.io
+    volumeHandle: cocktail-api-images-koktajlownik
+    readOnly: false
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ include "cocktail-api.fullname" . }}-images
+  labels:
+    {{- include "cocktail-api.labels" . | nindent 4 }}
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: standard-rwx
+  volumeName: {{ include "cocktail-api.fullname" . }}-gcs-pv
+  resources:
+    requests:
+      storage: {{ .Values.persistence.size }}
+{{- else }}
+---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -14,4 +56,5 @@ spec:
   resources:
     requests:
       storage: {{ .Values.persistence.size }}
+{{- end }}
 {{- end }}

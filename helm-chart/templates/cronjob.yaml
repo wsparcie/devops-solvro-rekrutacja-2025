@@ -17,6 +17,8 @@ spec:
           labels:
             {{- include "cocktail-api.selectorLabels" . | nindent 12 }}
             job: sync
+          annotations:
+            gke-gcsfuse/volumes: "true"
         spec:
           {{- with .Values.imagePullSecrets }}
           imagePullSecrets:

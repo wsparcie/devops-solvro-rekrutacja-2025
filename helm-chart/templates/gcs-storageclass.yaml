@@ -1,0 +1,17 @@
+{{- if and .Values.persistence.enabled (eq .Values.persistence.accessMode "ReadWriteMany") }}
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: standard-rwx
+  labels:
+    {{- include "cocktail-api.labels" . | nindent 4 }}
+provisioner: gcsfuse.csi.storage.gke.io
+volumeBindingMode: Immediate
+allowVolumeExpansion: true
+parameters:
+  bucketName: cocktail-api-images-koktajlownik
+mountOptions:
+  - implicit-dirs
+  - uid=1000
+  - gid=1000
+{{- end }}

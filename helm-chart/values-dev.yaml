@@ -1,7 +1,7 @@
 replicaCount: 1
 
 image:
-  repository: ksuser/cocktail-api
+  repository: ksuser/cocktails-api
   tag: 'dev'
 
 app:
